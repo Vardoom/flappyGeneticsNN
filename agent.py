@@ -17,6 +17,8 @@ class Agent:
         self.fitness_score = np.zeros(n_population)
         self.population = list()
 
+        self.traveled_distance = np.zeros(self.n_population)
+
         # Initialize all models
         for i in range(self.n_population):
             model = self.initiate_bird()
@@ -25,15 +27,11 @@ class Agent:
 
         if utils.LOAD_POP:
             for i in range(self.n_population):
-                self.population[i].load_weights("saved_population/model_" + str(i) + ".keras")
-
-        if utils.SAVE_POP:
-            self.save_population()
+                self.population[i].load_weights("load_population/model_" + str(i) + ".keras")
 
     def save_population(self):
         for i in range(self.n_population):
             self.population[i].save_weights("saved_population/model_" + str(i) + ".keras")
-        print("Population saved")
 
     def cross_breeding(self, bird_index_0, bird_index_1):
         weights_0 = self.population[bird_index_0].get_weights()
@@ -170,7 +168,11 @@ class Agent:
 
         self.generation += 1
 
-        return
+        if utils.SAVE_POP:
+            self.save_population()
+            print("Population saved")
+
+        return self.traveled_distance
 
     @staticmethod
     def initiate_bird():

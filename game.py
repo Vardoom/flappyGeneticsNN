@@ -125,10 +125,13 @@ class Game:
         return statuses
 
     def main_game(self, movement_info, agent):
+        for index in range(agent.n_population):
+            agent.traveled_distance[index] = 0
+
         score = player_index = loop_iter = 0
         player_index_gen = movement_info['playerIndexGen']
-        players_x_list = []
-        players_y_list = []
+        players_x_list = list()
+        players_y_list = list()
 
         for idx in range(agent.n_population):
             player_x, player_y = int(utils.SCREEN_WIDTH * 0.2), movement_info['playerY']
@@ -198,6 +201,7 @@ class Game:
                 if players_state[idxPlayer]:
                     action = agent.predict_action(players_y_list[idxPlayer], self.next_pipe_x,
                                                   self.next_pipe_hole_y, idxPlayer)
+                    agent.traveled_distance[idxPlayer] += 1
                     if action == 1:
                         if players_y_list[idxPlayer] > -2 * self.IMAGES['bird'][0].get_height():
                             players_vel_y[idxPlayer] = player_flap_acc

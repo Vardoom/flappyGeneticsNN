@@ -10,8 +10,8 @@ BIRD_MAX_VEL_Y = 10  # max vel along Y, max descend speed
 BIRD_MIN_VEL_Y = -8  # min vel along Y, max ascend speed
 BIRD_FLAP_ACC = -9  # players speed on flapping
 
-N_GENERATION = 100
-N_POPULATION = 100
+N_GENERATION = 135
+N_POPULATION = 50
 
 LOAD_POP = False
 SAVE_POP = True
