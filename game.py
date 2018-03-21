@@ -8,6 +8,7 @@ from pygame.locals import *
 
 from itertools import cycle
 import random
+import numpy as np
 import sys
 
 
@@ -88,20 +89,32 @@ class Game:
             self.SCREEN.blit(self.IMAGES['numbers'][digit], (x_offset, utils.SCREEN_HEIGHT * 0.1))
             x_offset += self.IMAGES['numbers'][digit].get_width()
 
+    def show_gen(self, generation):
+        """displays generation in center of screen"""
+        generation_digits = [int(x) for x in list(str(generation))]
+        total_width = 0  # total width of all numbers to be printed
+
+        for digit in generation_digits:
+            total_width += self.IMAGES['numbers'][digit].get_width()
+
+        x_offset = (utils.SCREEN_WIDTH - total_width) / 2
+
+        for digit in generation_digits:
+            self.SCREEN.blit(self.IMAGES['numbers'][digit], (x_offset, utils.SCREEN_HEIGHT * 0.9))
+            x_offset += self.IMAGES['numbers'][digit].get_width()
+
     def check_crash(self, players, upper_pipes, lower_pipes, agent):
         """returns True if bird collided with base or pipes."""
-        statuses = []
-        for idx in range(agent.n_population):
-            statuses.append(False)
+        statuses = np.zeros(agent.n_population)
 
         for idx in range(agent.n_population):
-            statuses[idx] = False
+            statuses[idx] = 0
             pi = players['index']
             players['w'] = self.IMAGES['bird'][0].get_width()
             players['h'] = self.IMAGES['bird'][0].get_height()
             # if player crashes into ground
             if players['y'][idx] + players['h'] >= utils.BASE_Y - 1:
-                statuses[idx] = True
+                statuses[idx] = 1  # 1 is for ground
             player_rect = pygame.Rect(players['x'][idx], players['y'][idx], players['w'], players['h'])
             pipe_w = self.IMAGES['pipe'][0].get_width()
             pipe_h = self.IMAGES['pipe'][0].get_height()
@@ -121,14 +134,15 @@ class Game:
                 l_collide = self.pixel_collision(player_rect, l_pipe_rect, p_hit_mask, l_hit_mask)
 
                 if u_collide or l_collide:
-                    statuses[idx] = True
+                    statuses[idx] = 2  # 2 is for pipes
         return statuses
 
     def main_game(self, movement_info, agent):
         for index in range(agent.n_population):
             agent.traveled_distance[index] = 0
 
-        score = player_index = loop_iter = 0
+        player_index = loop_iter = 0
+        scores = np.zeros(agent.n_population)
         player_index_gen = movement_info['playerIndexGen']
         players_x_list = list()
         players_y_list = list()
@@ -179,6 +193,8 @@ class Game:
         alive_players = agent.n_population
 
         while True:
+            if alive_players != 0 and max(scores) >= utils.MAX_SCORE:
+                alive_players = 0
             for idxPlayer in range(agent.n_population):
                 if players_y_list[idxPlayer] < 0 and players_state[idxPlayer]:
                     alive_players -= 1
@@ -190,7 +206,7 @@ class Game:
                     'baseX': base_x,
                     'upperPipes': upper_pipes,
                     'lowerPipes': lower_pipes,
-                    'score': score,
+                    'score': scores.sum(),
                     'playerVelY': 0,
                 }
             for idxPlayer in range(agent.n_population):
@@ -224,9 +240,14 @@ class Game:
             crash_test = self.check_crash(param, upper_pipes, lower_pipes, agent)
 
             for idx in range(agent.n_population):
-                if players_state[idx] and crash_test[idx]:
+                if players_state[idx] and crash_test[idx] == 1:
                     alive_players -= 1
                     players_state[idx] = False
+                    agent.fitness_score[idx] -= 20
+                if players_state[idx] and crash_test[idx] == 2:
+                    alive_players -= 1
+                    players_state[idx] = False
+                    agent.fitness_score[idx] -= 10
             if alive_players == 0:
                 return {
                     'y': movement_info['playerY'],
@@ -234,7 +255,7 @@ class Game:
                     'baseX': base_x,
                     'upperPipes': upper_pipes,
                     'lowerPipes': lower_pipes,
-                    'score': score,
+                    'score': scores.sum(),
                     'playerVelY': 0,
                 }
 
@@ -249,7 +270,7 @@ class Game:
                             self.next_pipe_x = lower_pipes[pipe_idx + 1]['x']
                             self.next_pipe_hole_y = (lower_pipes[pipe_idx + 1]['y'] + (
                                 upper_pipes[pipe_idx + 1]['y'] + self.IMAGES['pipe'][pipe_idx + 1].get_height())) / 2
-                            score += 1
+                            scores[idx] += 1
                             agent.fitness_score[idx] += 25
                             # SOUNDS['point'].play()
                         pipe_idx += 1
@@ -295,8 +316,9 @@ class Game:
 
             self.SCREEN.blit(self.IMAGES['base'], (base_x, utils.BASE_Y))
 
-            # print score so player overlaps the score
-            self.show_score(score)
+            # print score and generation so player overlaps the score or generation
+            self.show_score(int(scores.sum()))
+            self.show_gen(agent.generation)
 
             for idx in range(agent.n_population):
                 if players_state[idx]:

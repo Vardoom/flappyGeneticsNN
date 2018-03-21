@@ -8,14 +8,11 @@ from agent import Agent
 from game import Game
 
 
-def main():
+def main(n_population, n_generation):
     pygame.init()
     FPS_CLOCK = pygame.time.Clock()
     SCREEN = pygame.display.set_mode((int(utils.SCREEN_WIDTH), int(utils.SCREEN_HEIGHT)))
     pygame.display.set_caption('Flappy Bird')
-
-    n_population = utils.N_POPULATION
-    n_generation = utils.N_GENERATION
 
     # image, sound and hitmask dicts
     IMAGES, SOUNDS, HIT_MASKS = {}, {}, {}
@@ -53,24 +50,31 @@ def main():
     SOUNDS['swoosh'] = pygame.mixer.Sound('assets/audio/swoosh' + sound_ext)
     SOUNDS['wing'] = pygame.mixer.Sound('assets/audio/wing' + sound_ext)
 
-    generation = 0
+    generation = 1
     agent = Agent(generation, n_population)
     traveled_distance = np.zeros((n_generation, n_population))
+    scores = np.zeros((n_generation, n_population))
 
     for idx_i in range(n_generation):
         print("Generation nb: {}".format(agent.generation))
         new_game = Game(FPS_CLOCK, SCREEN, IMAGES, SOUNDS, HIT_MASKS)
         movement_info = new_game.show_welcome_animation()
         crash_info = new_game.main_game(movement_info, agent)
-        res = agent.genetic_breeding(method=0)
+        result_1, result_2 = agent.genetic_breeding(threshold=utils.THRESHOLD)
         for idx_j in range(n_population):
-            traveled_distance[idx_i, idx_j] = res[idx_j]
+            traveled_distance[idx_i, idx_j] = result_1[idx_j]
+            scores[idx_i, idx_j] = result_2[idx_j]
 
-    plt.figure()
-    for idx in range(n_population):
-        plt.plot(range(n_generation), traveled_distance[:, idx], 'ro')
-    plt.show()
+    return traveled_distance, scores
 
+
+n_pop = utils.N_POPULATION
+n_gen = utils.N_GENERATION
 
 if __name__ == '__main__':
-    main()
+    distance_tab, fitness_score = main(n_pop, n_gen)
+    plt.figure()
+    for idx in range(n_pop):
+        plt.plot(range(n_gen), distance_tab[:, idx], '.', color="red")
+    plt.show()
+    plt.savefig("images/distance.png")

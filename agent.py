@@ -55,7 +55,7 @@ class Agent:
             return 1
         return 0
 
-    def genetic_breeding(self, method=0):
+    def genetic_breeding(self, threshold=0.2):
         """Perform genetic updates here"""
         fitness_tot = self.fitness_score.sum()
         for i in range(self.n_population):
@@ -65,7 +65,9 @@ class Agent:
 
         new_weights = list()
 
-        if method == 0:
+        choice = random.uniform(0, 1)
+
+        if choice < threshold:
             for i in range(self.n_population // 2):
                 parent_0 = random.uniform(0, 1)
                 parent_1 = random.uniform(0, 1)
@@ -84,21 +86,18 @@ class Agent:
                 updated_weights_1 = self.mutate(updated_weights[1])
                 new_weights.append(updated_weights_0)
                 new_weights.append(updated_weights_1)
-
-        elif method == 1:
-            batch = [int(self.n_population * 0.1), int(self.n_population * 0.3),
-                     int(self.n_population * 0.5), int(self.n_population * 0.1)]
+        else:
             ordered_index = self.fitness_score.argsort()[::-1]
-            print(len(new_weights))
 
             # 10% of the children are direct copies from the best 10% of the parents
-            for index in ordered_index[range(batch[0])]:
-                new_weights.append(self.population[index].get_weights)
-            print(len(new_weights))
+            size = int(self.n_population * 0.1)
+            for index in ordered_index[range(size)]:
+                new_weights.append(self.population[index].get_weights())
 
             # 30% of the children come from random breeding of the top 30% of the parents
-            selected_indices = ordered_index[range(batch[1])]
-            for index_i in range(batch[1] // 2):
+            size = int(self.n_population * 0.3)
+            selected_indices = ordered_index[range(size)]
+            for index_i in range(size // 2):
                 parent_0 = random.uniform(0, 1)
                 parent_1 = random.uniform(0, 1)
                 index_0 = -1
@@ -116,10 +115,10 @@ class Agent:
                 updated_weights_1 = self.mutate(updated_weights[1])
                 new_weights.append(updated_weights_0)
                 new_weights.append(updated_weights_1)
-            print(len(new_weights))
 
-            # 50% of the children come from random breeding across all parents
-            for index_i in range(batch[2] // 2):
+            # 60% of the children come from random breeding across all parents
+            size = int(self.n_population * 0.6)
+            for index_i in range(size // 2):
                 parent_0 = random.uniform(0, 1)
                 parent_1 = random.uniform(0, 1)
                 index_0 = -1
@@ -137,11 +136,12 @@ class Agent:
                 updated_weights_1 = self.mutate(updated_weights[1])
                 new_weights.append(updated_weights_0)
                 new_weights.append(updated_weights_1)
-            print(len(new_weights))
 
+            """
             # 10% of the children come from breeding between best 10% and worst 10% of the parents
-            selected_indices_0 = ordered_index[range(batch[3])]
-            selected_indices_1 = self.fitness_score.argsort()[range(batch[3])]
+            size = int(self.n_population * 0.1)
+            selected_indices_0 = ordered_index[range(size)]
+            selected_indices_1 = self.fitness_score.argsort()[range(size)]
             for index_i in range(batch[3] // 2):
                 parent_0 = random.uniform(0, 1)
                 parent_1 = random.uniform(0, 1)
@@ -160,7 +160,7 @@ class Agent:
                 updated_weights_1 = self.mutate(updated_weights[1])
                 new_weights.append(updated_weights_0)
                 new_weights.append(updated_weights_1)
-            print(len(new_weights))
+            """
 
         for i in range(len(new_weights)):
             weight = new_weights[i]
@@ -172,16 +172,17 @@ class Agent:
             self.save_population()
             print("Population saved")
 
-        return self.traveled_distance
+        return self.traveled_distance, self.fitness_score
 
     @staticmethod
     def initiate_bird():
         bird = Sequential()
         bird.add(Dense(input_dim=3, units=7, name="dense_0"))
         bird.add(Activation("sigmoid", name="activation_0"))
-        # bird.add(Dense(units=6, name="dense_0"))
-        bird.add(Dense(units=1, name="dense_1"))
+        bird.add(Dense(units=6, name="dense_1"))
         bird.add(Activation("sigmoid", name="activation_1"))
+        bird.add(Dense(units=1, name="dense_2"))
+        bird.add(Activation("sigmoid", name="activation_2"))
 
         sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
 
