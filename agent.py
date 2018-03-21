@@ -55,7 +55,7 @@ class Agent:
             return 1
         return 0
 
-    def genetic_breeding(self, threshold=0.2):
+    def genetic_breeding(self):
         """Perform genetic updates here"""
         fitness_tot = self.fitness_score.sum()
         for i in range(self.n_population):
@@ -66,6 +66,7 @@ class Agent:
         new_weights = list()
 
         choice = random.uniform(0, 1)
+        threshold = (utils.N_GENERATION - self.generation) / (utils.N_GENERATION - 1)
 
         if choice < threshold:
             for i in range(self.n_population // 2):
