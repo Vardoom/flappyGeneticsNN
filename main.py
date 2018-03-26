@@ -60,7 +60,7 @@ def main(n_population, n_generation):
         new_game = Game(FPS_CLOCK, SCREEN, IMAGES, SOUNDS, HIT_MASKS)
         movement_info = new_game.show_welcome_animation()
         crash_info = new_game.main_game(movement_info, agent)
-        result_1, result_2 = agent.genetic_breeding(threshold=utils.THRESHOLD)
+        result_1, result_2 = agent.genetic_breeding()
         for idx_j in range(n_population):
             traveled_distance[idx_i, idx_j] = result_1[idx_j]
             scores[idx_i, idx_j] = result_2[idx_j]

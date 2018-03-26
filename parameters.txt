@@ -1,19 +1,9 @@
 Parameters of the genetic algorithm:
-Screen:
-FPS = 30
-SCREEN_WIDTH = 288.0
-SCREEN_HEIGHT = 512.0
-PIPE_GAP_SIZE = 100
-Velocity:
-PIPE_VEL_X = -4
-BIRD_MAX_VEL_Y = 10
-BIRD_MIN_VEL_Y = -8
-BIRD_FLAP_ACC = -9
 Simulation:
-N_GENERATION = 1000
+N_GENERATION = 500
 N_POPULATION = 50
-MAX_SCORE = 150
+MAX_SCORE = 100
+MUTATION_THRESHOLD = 0.85
 Load and solving:
-THRESHOLD = 0.5
 LOAD_POP = False
 SAVE_POP = True

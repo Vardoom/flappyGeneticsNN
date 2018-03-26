@@ -69,6 +69,7 @@ class Agent:
         threshold = (utils.N_GENERATION - self.generation) / (utils.N_GENERATION - 1)
 
         if choice < threshold:
+            print("Breeding method: classic")
             for i in range(self.n_population // 2):
                 parent_0 = random.uniform(0, 1)
                 parent_1 = random.uniform(0, 1)
@@ -88,6 +89,7 @@ class Agent:
                 new_weights.append(updated_weights_0)
                 new_weights.append(updated_weights_1)
         else:
+            print("Breeding method: enhanced")
             ordered_index = self.fitness_score.argsort()[::-1]
 
             # 10% of the children are direct copies from the best 10% of the parents
@@ -195,7 +197,7 @@ class Agent:
         mutated_weights = weights.copy()
         for i in range(len(weights)):
             for j in range(len(weights[i])):
-                if random.uniform(0, 1) > 0.85:
+                if random.uniform(0, 1) > utils.MUTATION_THRESHOLD:
                     change = random.uniform(-0.5, 0.5)
                     mutated_weights[i][j] += change
         return mutated_weights
